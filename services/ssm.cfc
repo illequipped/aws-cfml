@@ -65,64 +65,19 @@ component {
     ) {
         var requestSettings = api.resolveRequestSettings( argumentCollection = arguments );
         var payload = { 'Path': arguments.Path };
-        if ( !isNull( arguments.Recursive ) ) {
-            payload[ 'Recursive' ] = arguments.Recursive;
-        }
-        if ( !isNull( arguments.WithDecryption ) ) {
-            payload[ 'WithDecryption' ] = arguments.WithDecryption;
-        }
-        if ( !isNull( arguments.MaxResults ) ) {
-            payload[ 'MaxResults' ] = arguments.MaxResults;
-        }
-        if ( !isNull( arguments.NextToken ) ) {
-            payload[ 'NextToken' ] = arguments.NextToken;
+        for (
+            var key in [
+                'Recursive',
+                'WithDecryption',
+                'MaxResults',
+                'NextToken'
+            ]
+        ) {
+            if ( structKeyExists( arguments, key ) ) {
+                payload[ key ] = arguments[ key ];
+            }
         }
         return apiCall( requestSettings, 'GetParametersByPath', payload );
-    }
-
-    /**
-    * Retrieves all parameters from a specified path.
-    * Handles pagination to ensure all parameters within the path are fetched.
-    * @Path The hierarchy path to query parameters. Must start with a forward slash (e.g., "/production").
-    * @Recursive If true, retrieves parameters from the entire hierarchy under the specified path.
-    * @withDecryption If true, retrieves decrypted values for secure string parameters.
-    */
-    public array function getAllParametersByPath(
-        required string path,
-        required boolean recursive,
-        required boolean withDecryption
-    ) {
-        var allParameters = [];
-        var nextToken = "";
-        var parametersResponse = {};
-
-        // Initial loop condition
-        var continueLoop = true;
-
-        while (continueLoop) {
-            // Make the API call to get parameters by path
-            parametersResponse = getParametersByPath(
-                Path = arguments.path,
-                Recursive = arguments.recursive,
-                WithDecryption = arguments.withDecryption,
-                MaxResults = 10, // Maximum items per call
-                NextToken = nextToken
-            );
-
-            // Append the retrieved parameters to the results array, merging arrays into a flat array
-            if (structKeyExists(parametersResponse.data, "Parameters")) {
-                arrayAppend(allParameters, parametersResponse.data.Parameters, true);
-            }
-
-            // Update nextToken and determine if the loop should continue
-            if (structKeyExists(parametersResponse.data, "NextToken")) {
-                nextToken = parametersResponse.data.NextToken;
-            } else {
-                continueLoop = false;
-            }
-        }
-
-        return allParameters;
     }
 
     /**
@@ -142,7 +97,7 @@ component {
         var requestSettings = api.resolveRequestSettings( argumentCollection = arguments );
         var payload = {
             'Name': arguments.Name,
-            'Value': (len(arguments.Value) ? arguments.Value : " "),
+            'Value': arguments.Value,
             'Type': arguments.Type
         };
         if ( !isNull( arguments.Overwrite ) ) {
