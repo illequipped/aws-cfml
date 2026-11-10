@@ -87,12 +87,16 @@ component {
     * @Value The parameter value.
     * @Type The type of parameter. Valid values are String, StringList, and SecureString.
     * @Overwrite Overwrite an existing parameter of the same name.
+    * @KeyId The ID, ARN or alias of the KMS key used to encrypt a SecureString parameter. If omitted, the AWS managed key (aws/ssm) is used.
+    * @Description Information about the parameter.
     */
     public any function putParameter(
         required string Name,
         required string Value,
         required string Type,
-        boolean Overwrite
+        boolean Overwrite,
+        string KeyId,
+        string Description
     ) {
         var requestSettings = api.resolveRequestSettings( argumentCollection = arguments );
         var payload = {
@@ -100,8 +104,16 @@ component {
             'Value': arguments.Value,
             'Type': arguments.Type
         };
-        if ( !isNull( arguments.Overwrite ) ) {
-            payload[ 'Overwrite' ] = arguments.Overwrite;
+        for (
+            var key in [
+                'Overwrite',
+                'KeyId',
+                'Description'
+            ]
+        ) {
+            if ( structKeyExists( arguments, key ) ) {
+                payload[ key ] = arguments[ key ];
+            }
         }
         return apiCall( requestSettings, 'PutParameter', payload );
     }
